@@ -1,4 +1,5 @@
 '''Version 0.5'''
+import json
 
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
@@ -34,7 +35,7 @@ AWARD_NAMES = [
     "best performance by an actor in a motion picture - drama",
     "best television series - comedy or musical",
     "best performance by an actor in a television series - drama",
-    "best performance by an actor in a television series - comedy or musical",
+    "best performance by an actor in a television series - comedy or musical"
 ]
 
 def get_hosts(year):
@@ -127,7 +128,7 @@ def get_winner(year):
         - Use the hardcoded award names as keys (from the global AWARD_NAMES list)
         - Each value should be a single string (the winner's name)
     '''
-    # Your code here
+    #for award in AWARD_NAMES:
     return winners
 
 def get_presenters(year):
@@ -169,7 +170,20 @@ def pre_ceremony():
         - This function should handle all one-time setup tasks
         - Print progress messages to help with debugging
     '''
-    # Your code here
+    #load tweets (or try)
+    try:
+        with open("gg2013.json", "r", encoding="utf-8") as f:
+            tweets = json.load(f)
+        print(f"{len(tweets)} tweets loaded!")
+    except FileNotFoundError:
+        print("file not found")
+        return
+    except json.JSONDecodeError:
+        print("could not parse tweet file")
+        return
+    
+    #pre-process tweets- TODO
+    
     print("Pre-ceremony processing complete.")
     return
 
