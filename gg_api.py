@@ -1,5 +1,8 @@
 '''Version 0.5'''
 import json
+import re
+#from datetime import datetime #for debugging only as of now
+#from langdetect import detect
 
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
@@ -154,6 +157,16 @@ def get_presenters(year):
     # Your code here
     return presenters
 
+def clean_tweet(tweet):
+    #helper function, not built into project reqs.
+    """removes emojii(s?), random characters, etc. (anything other than a-z, A-Z, 
+    0-9, #, characters ,'"&()?.:= and spaces)
+    """
+    #re.sub(pattern, replacement, string) format-> replacement is nothing
+    #\ means " is taken as regular character like any other
+    cleaned = re.sub(r"[^a-zA-Z0-9\s#,'\"&?().:=]", "", tweet)
+    return(cleaned)
+
 def pre_ceremony():
     '''Pre-processes and loads data for the Golden Globes analysis.
     
@@ -173,18 +186,82 @@ def pre_ceremony():
     #load tweets (or try)
     try:
         with open("gg2013.json", "r", encoding="utf-8") as f:
-            tweets = json.load(f)
-        print(f"{len(tweets)} tweets loaded!")
+            unfiltered_tweets = json.load(f)
+        print(f"{len(unfiltered_tweets)} tweets loaded!")
+
     except FileNotFoundError:
         print("file not found")
         return
+    
     except json.JSONDecodeError:
         print("could not parse tweet file")
         return
     
-    #pre-process tweets- TODO
-    
+    #pre-process tweets
+
+    #clean tweets
+    print("cleaning tweets")
+    clean_tweets = []
+    for tweet_obj in unfiltered_tweets:
+        tweet = tweet_obj.get("text", "")
+        clean_tweets.append(clean_tweet(tweet))
+    print("tweets cleaned")
+
+    #drop short tweets (<20 chars) (what can you really say in 20 chars?)
+    print("dropping tweets that are too short/meaningless")
+    long_enough_tweets = []
+    for tweet in clean_tweets:
+        if len(tweet) < 20:
+            continue
+        long_enough_tweets.append(tweet)
+    print("shortest tweets dropped")
+    print(f"{len(long_enough_tweets)} tweets left")
+
+
+
+    """
+    #this is commented out for now unless i figure out a way to make it take less time or 
+    #we decide to filter/preprocess more tweets out because english detection is currently
+    #taking like 40 mins ): and also most seem to be in english (just from eyeballing)
+    print("Current time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    #drop non-english
+    print("filtering english tweets only")
+    english_tweets = []
+    tweet_count = 0
+    for tweet in long_enough_tweets:
+        #try to detect a language (english) 
+        try:
+            if detect(tweet) == "en":
+                english_tweets.append(tweet)
+                tweet_count += 1
+                if ((tweet_count % 1000) == 0):
+                    print("1000 tweets appended")
+                    print("Current time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        except: #no lang detected (too short, couldn't tell, etc)
+            continue
+
+    print("non-english tweets removed")
+    print(f"{len(english_tweets)} tweets left")
+    print("Current time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    """
+
     print("Pre-ceremony processing complete.")
+
+    #did opt to keep duplicates, how many ways are there to say "someone wins 
+    #best actor" if a bunch of people tweet that they probably did win
+
+    #save to json
+    processed_filename = f"{YEAR}_processed_tweets.json"
+
+    try:
+        with open(processed_filename, "w", encoding="utf-8") as f:
+            json.dump(long_enough_tweets, f, indent=2)
+            #json.dump(english_tweets, f, indent=2)
+    except Exception as e:
+        print("error:", e)
+
+    print(f"processed tweets saved to {processed_filename}")
     return
 
 def main():
@@ -211,4 +288,5 @@ def main():
     return
 
 if __name__ == '__main__':
+    #pre_ceremony()
     main()
