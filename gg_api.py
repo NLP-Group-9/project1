@@ -1,12 +1,22 @@
 '''Version 0.5'''
 import json
 import re
+from data_structs import Event, Award, Nominee
+
 #from datetime import datetime #for debugging only as of now
 #from langdetect import detect
+
+#name of ceremony
+NAME = "the Golden Globes"
 
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
 
+#Global Variable for entire EVENT
+event = None
+
+# Global variable to store processed tweets
+final_tweets = []
 # Global variable for hardcoded award names
 # This list is used by get_nominees(), get_winner(), and get_presenters() functions
 # as the keys for their returned dictionaries
@@ -217,8 +227,6 @@ def pre_ceremony():
     print("shortest tweets dropped")
     print(f"{len(long_enough_tweets)} tweets left")
 
-
-
     """
     #this is commented out for now unless i figure out a way to make it take less time or 
     #we decide to filter/preprocess more tweets out because english detection is currently
@@ -245,6 +253,9 @@ def pre_ceremony():
     print(f"{len(english_tweets)} tweets left")
     print("Current time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     """
+
+    #saves in global var for use in other functions
+    final_tweets = long_enough_tweets
 
     print("Pre-ceremony processing complete.")
 
@@ -285,8 +296,16 @@ def main():
         - Make sure to handle errors gracefully
     '''
     # Your code here
+    pre_ceremony()
+
+    # initialize global event variable
+    event = Event(name=NAME, year=YEAR, hosts=[], awards=[])
+    
+    #get hosts for event
+    hosts = get_hosts(YEAR)
+
+
     return
 
 if __name__ == '__main__':
-    #pre_ceremony()
     main()

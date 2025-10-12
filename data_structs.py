@@ -25,15 +25,13 @@ class Award:
         else:
             return False
 
-    
 
 class Event:
-    def __init__(self, name, year, hosts, awards, date=None):
+    def __init__(self, name, year, hosts, awards):
         self.name = name
         self.year = year
         self.hosts = hosts
         self.awards = awards
-        self.date = date
     
     def add_award(self, award):
         self.awards.append(award)
