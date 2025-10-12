@@ -12,11 +12,12 @@ NAME = "the Golden Globes"
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
 
-#Global Variable for entire EVENT
-event = None
-
-# Global variable to store processed tweets
+# Global variable to store the processed tweets
 final_tweets = []
+
+# Global variable to store the Event object
+event = Event(name=NAME, year=YEAR, hosts=[], awards=[])
+
 # Global variable for hardcoded award names
 # This list is used by get_nominees(), get_winner(), and get_presenters() functions
 # as the keys for their returned dictionaries
@@ -193,6 +194,8 @@ def pre_ceremony():
         - This function should handle all one-time setup tasks
         - Print progress messages to help with debugging
     '''
+    global final_tweets
+    
     #load tweets (or try)
     try:
         with open("gg2013.json", "r", encoding="utf-8") as f:
@@ -298,9 +301,6 @@ def main():
     # Your code here
     pre_ceremony()
 
-    # initialize global event variable
-    event = Event(name=NAME, year=YEAR, hosts=[], awards=[])
-    
     #get hosts for event
     hosts = get_hosts(YEAR)
 
