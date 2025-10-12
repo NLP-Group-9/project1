@@ -2,12 +2,18 @@
 import json
 import re
 from data_structs import Event, Award, Nominee
+from collections import Counter
+import spacy
+import time
 
 #from datetime import datetime #for debugging only as of now
 #from langdetect import detect
 
 #name of ceremony
-NAME = "the Golden Globes"
+NAME = "The Golden Globes"
+
+#number of hosts
+NUM_HOSTS = 2
 
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
@@ -67,6 +73,50 @@ def get_hosts(year):
         - The function should return a list even if there's only one host
     '''
     # Your code here
+    # using spacy for Recognizing First Names and Last Names
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
+        return []
+    
+    #filter to tweets that only have host keywords
+    keywords = ['hosting the', 'host the', 'hosts the', 'are hosting', 'co-host']
+    #keywords to throw out irrelevant tweets
+    keywords_to_throw = ['next year', 'should', 'could', 'next', 'future']
+    filtered_tweets = []
+
+    for tweet in final_tweets:
+        if any(keyword in tweet.lower() for keyword in keywords):
+            if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
+                filtered_tweets.append(tweet)
+    print(rf"# of Tweets with host keywords: {len(filtered_tweets)} tweets")
+
+    # # Print all filtered tweets
+    # for i, tweet in enumerate(filtered_tweets, start=1):
+    #     print(f"{i}. {tweet}")
+    #     print()
+
+    #store potential hosts here
+    host_names = []
+
+    for tweet in filtered_tweets:
+        doc = nlp(tweet)
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":         #only get the Person labels
+                name = ent.text.strip()
+                word_count = len(name.split())
+                if 2 <= word_count <= 3:      #keep names with 2 to 3 words (First, Middle, Last Names)
+                    host_names.append(name)
+
+    host_counts = Counter(host_names)
+
+    #extract only top NUM_HOSTS names
+    hosts = [name for name, count in host_counts.most_common(NUM_HOSTS)]
+
+    #update the EVENT global variable with the hosts
+    event.hosts = hosts
+    
     return hosts
 
 def get_awards(year):
@@ -195,7 +245,7 @@ def pre_ceremony():
         - Print progress messages to help with debugging
     '''
     global final_tweets
-    
+
     #load tweets (or try)
     try:
         with open("gg2013.json", "r", encoding="utf-8") as f:
@@ -257,6 +307,9 @@ def pre_ceremony():
     print("Current time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     """
 
+    #remove duplicate text tweets
+    long_enough_tweets = list(set(long_enough_tweets))
+
     #saves in global var for use in other functions
     final_tweets = long_enough_tweets
 
@@ -304,8 +357,18 @@ def main():
     #get hosts for event
     hosts = get_hosts(YEAR)
 
+    print(hosts)
+
 
     return
 
 if __name__ == '__main__':
-    main()
+    #start timer
+    start = time.time()
+
+    main() #main run
+
+    #end timer
+    end = time.time()
+    time = (end - start) / 60
+    print(rf"Time taken to run: {time} minutes")
