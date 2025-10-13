@@ -116,7 +116,7 @@ def get_hosts(year):
 
     #update the EVENT global variable with the hosts
     event.hosts = hosts
-    
+
     return hosts
 
 def get_awards(year):
@@ -136,6 +136,60 @@ def get_awards(year):
         - The only hardcoded part allowed is the word "Best"
     '''
     # Your code here
+    primary_keyword = 'best'
+    pre_keywords = ['wins', 'won', 'winner', 'winning', 'awarded']
+    post_keywords = ['goes to', 'went to']
+    secondary_keywords = pre_keywords + post_keywords
+
+    # goes through each tweet to see if primary_keywords AND at least one of secondary keywords is present
+    award_tweets = []
+    for tweet in final_tweets:
+        tweet_lower = tweet.lower()
+        if primary_keyword in tweet_lower and any(keyword in tweet_lower for keyword in secondary_keywords):
+            award_tweets.append(tweet)
+
+    print(rf"Potential # of award name tweets: {len(award_tweets)}")
+
+    # Print all filtered tweets
+    for i, tweet in enumerate(award_tweets, start=1):
+        print(f"{i}. {tweet}")
+        print()
+
+    awards = []
+
+    #Extract award names from filtered tweets
+    for tweet in award_tweets:
+        tweet_lower = tweet.lower()
+
+        #analyze pre keywords, i.e [wins] Best Movie
+        for pre_keyword in pre_keywords:
+            if pre_keyword in tweet_lower:
+                pre_idx = tweet_lower.find(pre_keyword)
+                after_pre = tweet_lower[pre_idx + len(pre_keyword):].strip()
+                
+                if after_pre.startswith(primary_keyword):  # Check if starts with 'best'
+                    pattern = rf'{primary_keyword}(?:\s+[a-z\-]+){{1,15}}'
+                    matches = re.findall(pattern, after_pre)
+                    awards.extend([m.strip() for m in matches])
+        
+        #analyze post keywords, i.e Best Movie [goes to]
+        for post_keyword in post_keywords:
+            if post_keyword in tweet_lower:
+                post_idx = tweet_lower.find(post_keyword)
+                before_post = tweet_lower[:post_idx].strip()
+                
+                pattern = rf'{primary_keyword}(?:\s+[a-z\-]+){{1,15}}'
+                matches = re.findall(pattern, before_post)
+                awards.extend([m.strip() for m in matches])
+        
+    award_counts = Counter(awards)
+    
+    awards = [award for award, count in award_counts.most_common(30) if count > 1]
+    
+    print(f"\nTop awards found:")
+    for i, (award, count) in enumerate(award_counts.most_common(20), 1):
+        print(f"{i}. {award}: {count}")
+
     return awards
 
 def get_nominees(year):
@@ -356,8 +410,11 @@ def main():
 
     #get hosts for event
     hosts = get_hosts(YEAR)
+    print(rf"Hosts: {hosts}")
 
-    print(hosts)
+    #get awards
+    awards = get_awards(YEAR)
+    print(rf"Awards: {awards}")
 
 
     return
