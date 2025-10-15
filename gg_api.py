@@ -8,12 +8,15 @@ import time
 
 #from datetime import datetime #for debugging only as of now
 #from langdetect import detect
+prepositions = ['the', 'a', 'an', 'of', 'at', 'in', 'on', 'for', 'to']
 
 #name of ceremony
 NAME = "The Golden Globes"
+EVENT_NAME_LIST = [word.lower() for word in NAME.split() if word.lower() not in prepositions] #string list of event w/o prepositions
 
 #number of hosts
 NUM_HOSTS = 2
+NUM_AWARDS = 26
 
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
@@ -29,6 +32,7 @@ event = Event(name=NAME, year=YEAR, hosts=[], awards=[])
 # as the keys for their returned dictionaries
 # Students should populate this list with the actual award categories for their year, to avoid cascading errors on outputs that depend on correctly extracting award names (e.g., nominees, presenters, winner)
 
+#Correct Award Names
 AWARD_NAMES = [
     "best screenplay - motion picture",
     "best director - motion picture",
@@ -57,6 +61,48 @@ AWARD_NAMES = [
     "best performance by an actor in a television series - drama",
     "best performance by an actor in a television series - comedy or musical"
 ]
+
+#sentence similarity scores
+def similarity_score(s1, s2):
+    words_1 = set(s1.split())
+    words_2 = set(s2.split())
+
+    intersection = words_1.intersection(words_2)
+    union = words_1.union(words_2)
+
+    score = len(intersection) / len(union) if union else 0
+    return score
+
+#group sentences that are similar based on thres
+def similar_groups(sentences, dict_counts, thres = 0.95):
+    groups = []
+    used = []
+
+    #For each sentence pair, get similarity score then group if above thres
+    for i, sentence_1 in enumerate(sentences):
+        if i in used:
+            continue
+
+        group = [sentence_1]
+        used.append(i)
+
+        for j, sentence_2 in enumerate(sentences[i+1:], start=i+1):
+            if j in used:
+                continue
+                
+            if similarity_score(sentence_1, sentence_2) >= thres:
+                group.append(sentence_2)
+                used.append(j)
+        
+        #select one candidate sentence to represent entire group according to max len
+        candidate = max(group, key=len)
+        total_count = sum(dict_counts[sentence] for sentence in group)
+        groups.append((candidate, total_count))
+
+    return groups
+
+
+    
 
 def get_hosts(year):
     '''Returns the host(s) of the Golden Globes ceremony for the given year.
@@ -132,8 +178,9 @@ def get_awards(year):
     '''
     # Your code here
     primary_keyword = 'best'
-    pre_keywords = ['wins', 'won', 'winner', 'winning', 'awarded']
+    pre_keywords = ['wins', 'won', 'winner', 'winning', 'awarded', 'is awarded to']
     post_keywords = ['goes to', 'went to']
+    troublesome_keywords = ['for', 'at', 'at the', 'at ' + NAME, 'at ' + NAME.lower(), NAME.lower(), NAME, 'http'] + EVENT_NAME_LIST #we will filter these out
     secondary_keywords = pre_keywords + post_keywords
 
     # goes through each tweet to see if primary_keywords AND at least one of secondary keywords is present
@@ -177,13 +224,35 @@ def get_awards(year):
                 pattern = rf'{primary_keyword}(?:\s+[a-z\-]+){{1,15}}'
                 matches = re.findall(pattern, before_post)
                 awards.extend([m.strip() for m in matches])
-        
-    award_counts = Counter(awards)
     
-    awards = [award for award, count in award_counts.most_common(30) if count > 1]
+    filtered_awards = []
+    #clean the awards from troublesome_keywords
+    for award in awards:
+        pattern = r'\s+(' + '|'.join(troublesome_keywords) + ')$'
+        cleaned = re.sub(pattern, '', award)
+        #remove for and trailing words after
+        cleaned = re.sub(r'\s+for\s+(?:\w+\s*){1,10}$', '', cleaned)
+        cleaned = ' '.join(cleaned.split())
+        filtered_awards.append(cleaned)
+
+    awards = filtered_awards
+
+    award_counts = Counter(awards)
+
+    #group similar award names
+    award_names = list(award_counts.keys())
+    grouped_awards = similar_groups(award_names, award_counts, thres=0.78)
+    merged_counts = {award: count for award, count in grouped_awards}
+    award_counts = Counter(merged_counts)
+
+    #Filter to award names >= 4 words
+    awards = [award for award, count in award_counts.most_common(100) if count > 1 and len(award.split()) >= 4]
+    
+    #Gets top NUM_AWARDS
+    awards = awards[:NUM_AWARDS]
     
     print(f"\nTop awards found:")
-    for i, (award, count) in enumerate(award_counts.most_common(20), 1):
+    for i, (award, count) in enumerate(award_counts.most_common(100), 1):
         print(f"{i}. {award}: {count}")
 
     return awards
@@ -449,8 +518,8 @@ def main():
     pre_ceremony()
 
     #get hosts for event
-    hosts = get_hosts(YEAR)
-    print(rf"Hosts: {hosts}")
+    # hosts = get_hosts(YEAR)
+    # print(rf"Hosts: {hosts}")
 
     #get awards
     awards = get_awards(YEAR)
