@@ -72,7 +72,6 @@ def get_hosts(year):
         - Do NOT change the name of this function or what it returns
         - The function should return a list even if there's only one host
     '''
-    # Your code here
     # using spacy for Recognizing First Names and Last Names
     try:
         nlp = spacy.load("en_core_web_sm")
@@ -92,13 +91,7 @@ def get_hosts(year):
                 filtered_tweets.append(tweet)
     print(rf"# of Tweets with host keywords: {len(filtered_tweets)} tweets")
 
-    # # Print all filtered tweets
-    # for i, tweet in enumerate(filtered_tweets, start=1):
-    #     print(f"{i}. {tweet}")
-    #     print()
 
-    #store potential hosts here
-    host_names = []
 
     for tweet in filtered_tweets:
         doc = nlp(tweet)
@@ -118,6 +111,8 @@ def get_hosts(year):
     event.hosts = hosts
 
     return hosts
+
+
 
 def get_awards(year):
     '''Returns the list of award categories for the Golden Globes ceremony.
@@ -152,8 +147,9 @@ def get_awards(year):
 
     # Print all filtered tweets
     for i, tweet in enumerate(award_tweets, start=1):
-        print(f"{i}. {tweet}")
-        print()
+        #print(f"{i}. {tweet}")
+        #print()
+        pass
 
     awards = []
 
@@ -269,8 +265,52 @@ def get_presenters(year):
         - Use the hardcoded award names as keys (from the global AWARD_NAMES list)
         - Each value should be a list of strings, even if there's only one presenter
     '''
-    # Your code here
-    return presenters
+        # using spacy for Recognizing First Names and Last Names
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
+        return []
+    
+    #filter to tweets that only have host keywords
+    keywords = ['presenting the', 'present the', 'presents the', 'are presenting', \
+                'presenters', 'presents', 'presented by', 'presented', 'present']
+    #keywords to throw out irrelevant tweets
+    keywords_to_throw = ['next year', 'last year', 'should', 'could', 'next', 'future' \
+                         'past', 'previous', 'last', 'former']
+    filtered_tweets = []
+
+    for tweet in final_tweets:
+        if any(keyword in tweet.lower() for keyword in keywords):
+            if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
+                filtered_tweets.append(tweet)
+
+    print(rf"# of Tweets with presenter keywords: {len(filtered_tweets)} tweets")
+
+
+    #actual award name: [presenter names]
+    presenters = {}
+
+    #for each award name make a list of words that would refer to it 
+    for award in AWARD_NAMES:
+        presenters[award] = []
+        #make a list of keywords for each award name
+        award_lower = award.lower()
+        award_keywords = [w for w in award_lower.split() \
+                          if w not in {'by', 'an', 'of', '-', 'the', 'a', 'in', 'or'}]
+        #add some common alternates/abbreviations
+        if 'television' in award_keywords:
+            award_keywords.append('tv')
+        if 'series' in award_keywords:
+            award_keywords.append('show')
+        if ('motion' in award_keywords) and ('picture' in award_keywords):
+            award_keywords.append('movie')
+            award_keywords.append('film')
+
+        for tweet in filtered_tweets:
+            pass
+
+    return(presenters)
 
 def clean_tweet(tweet):
     #helper function, not built into project reqs.
