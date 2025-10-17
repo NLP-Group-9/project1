@@ -17,6 +17,7 @@ EVENT_NAME_LIST = [word.lower() for word in NAME.split() if word.lower() not in 
 #number of hosts
 NUM_HOSTS = 2
 NUM_AWARDS = 26
+NUM_BEST_DRESSED = 5
 
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
@@ -102,7 +103,56 @@ def similar_groups(sentences, dict_counts, thres = 0.95):
     return groups
 
 
+def get_best_dressed(year):
+    '''Returns the host(s) of the Golden Globes ceremony for the given year.
     
+    Args:
+        year (str): The year of the Golden Globes ceremony (e.g., "2013")
+    
+    Returns:
+        list: A list of strings containing the host names. 
+              Example: ["Seth Meyers"] or ["Tina Fey", "Amy Poehler"]
+    
+    Note:
+        - Do NOT change the name of this function or what it returns
+        - The function should return a list even if there's only one host
+    '''
+    # using spacy for Recognizing First Names and Last Names
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
+        return []
+    
+    #filter to tweets that only have host keywords
+    keywords = ['best dressed']
+    #keywords to throw out irrelevant tweets
+    keywords_to_throw = []
+    filtered_tweets = []
+
+    for tweet in final_tweets:
+        if any(keyword in tweet.lower() for keyword in keywords):
+            if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
+                filtered_tweets.append(tweet)
+    print(rf"# of Tweets with best dressed keywords: {len(filtered_tweets)} tweets")
+
+    best_dressed_names = []
+
+    for tweet in filtered_tweets:
+        doc = nlp(tweet)
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":         #only get the Person labels
+                name = ent.text.strip()
+                word_count = len(name.split())
+                if 2 <= word_count <= 3:      #keep names with 2 to 3 words (First, Middle, Last Names)
+                    best_dressed_names.append(name)
+
+    best_dressed_counts = Counter(best_dressed_names)
+
+    #extract only top NUM_BEST_DRESSED names
+    best_dressed = [name for name, count in best_dressed_counts.most_common(NUM_BEST_DRESSED)]
+
+    return best_dressed
 
 def get_hosts(year):
     '''Returns the host(s) of the Golden Globes ceremony for the given year.
@@ -137,7 +187,7 @@ def get_hosts(year):
                 filtered_tweets.append(tweet)
     print(rf"# of Tweets with host keywords: {len(filtered_tweets)} tweets")
 
-
+    host_names = []
 
     for tweet in filtered_tweets:
         doc = nlp(tweet)
@@ -522,9 +572,12 @@ def main():
     # print(rf"Hosts: {hosts}")
 
     #get awards
-    awards = get_awards(YEAR)
-    print(rf"Awards: {awards}")
+    # awards = get_awards(YEAR)
+    # print(rf"Awards: {awards}")
 
+    #get best dressed
+    best_dressed = get_best_dressed(YEAR)
+    print(rf"Best Dressed: {best_dressed}")
 
     return
 
