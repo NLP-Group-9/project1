@@ -844,12 +844,12 @@ def main():
     pre_ceremony()
 
     #get hosts for event
-    # hosts = get_hosts(YEAR)
-    # print(rf"Hosts: {hosts}")
+    hosts = get_hosts(YEAR)
+    print(rf"Hosts: {hosts}")
 
     #get awards
-    # awards = get_awards(YEAR)
-    # print(rf"Awards: {awards}")
+    awards = get_awards(YEAR)
+    print(rf"Awards: {awards}")
 
     # nominees = get_nominees(YEAR)
     # print(nominees)
