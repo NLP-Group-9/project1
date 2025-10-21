@@ -14,10 +14,11 @@ prepositions = ['the', 'a', 'an', 'of', 'at', 'in', 'on', 'for', 'to']
 NAME = "The Golden Globes"
 EVENT_NAME_LIST = [word.lower() for word in NAME.split() if word.lower() not in prepositions] #string list of event w/o prepositions
 
-#number of hosts
+#number constants
 NUM_HOSTS = 2
 NUM_AWARDS = 26
 NUM_BEST_DRESSED = 5
+NUM_WORST_DRESSED = 5
 
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
@@ -153,6 +154,57 @@ def get_best_dressed(year):
     best_dressed = [name for name, count in best_dressed_counts.most_common(NUM_BEST_DRESSED)]
 
     return best_dressed
+
+def get_worst_dressed(year):
+    '''Returns the host(s) of the Golden Globes ceremony for the given year.
+    
+    Args:
+        year (str): The year of the Golden Globes ceremony (e.g., "2013")
+    
+    Returns:
+        list: A list of strings containing the host names. 
+              Example: ["Seth Meyers"] or ["Tina Fey", "Amy Poehler"]
+    
+    Note:
+        - Do NOT change the name of this function or what it returns
+        - The function should return a list even if there's only one host
+    '''
+    # using spacy for Recognizing First Names and Last Names
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
+        return []
+    
+    #filter to tweets that only have host keywords
+    keywords = ['worst dressed']
+    #keywords to throw out irrelevant tweets
+    keywords_to_throw = []
+    filtered_tweets = []
+
+    for tweet in final_tweets:
+        if any(keyword in tweet.lower() for keyword in keywords):
+            if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
+                filtered_tweets.append(tweet)
+    print(rf"# of Tweets with worst dressed keywords: {len(filtered_tweets)} tweets")
+
+    worst_dressed_names = []
+
+    for tweet in filtered_tweets:
+        doc = nlp(tweet)
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":         #only get the Person labels
+                name = ent.text.strip()
+                word_count = len(name.split())
+                if 2 <= word_count <= 3:      #keep names with 2 to 3 words (First, Middle, Last Names)
+                    worst_dressed_names.append(name)
+
+    worst_dressed_counts = Counter(worst_dressed_names)
+
+    #extract only top NUM_BEST_DRESSED names
+    worst_dressed = [name for name, count in worst_dressed_counts.most_common(NUM_WORST_DRESSED)]
+
+    return worst_dressed
 
 def get_hosts(year):
     '''Returns the host(s) of the Golden Globes ceremony for the given year.
@@ -807,6 +859,10 @@ def main():
     #get best dressed
     best_dressed = get_best_dressed(YEAR)
     print(rf"Best Dressed: {best_dressed}")
+
+    #get best dressed
+    worst_dressed = get_worst_dressed(YEAR)
+    print(rf"Worst Dressed: {worst_dressed}")
 
     return
 
