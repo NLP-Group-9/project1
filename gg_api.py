@@ -5,6 +5,7 @@ from data_structs import Event, Award, Nominee
 from collections import Counter
 import spacy
 import time
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 #from datetime import datetime #for debugging only as of now
 #from langdetect import detect
@@ -17,8 +18,8 @@ EVENT_NAME_LIST = [word.lower() for word in NAME.split() if word.lower() not in 
 #number constants
 NUM_HOSTS = 2
 NUM_AWARDS = 26
-NUM_BEST_DRESSED = 5
-NUM_WORST_DRESSED = 5
+NUM_BEST_DRESSED = 3
+NUM_WORST_DRESSED = 3
 
 # Year of the Golden Globes ceremony being analyzed
 YEAR = "2013"
@@ -63,6 +64,36 @@ AWARD_NAMES = [
     "best performance by an actor in a television series - drama",
     "best performance by an actor in a television series - comedy or musical"
 ]
+
+# Hardcoded winners for testing purposes to test get_winner_sentiment
+OFFICIAL_WINNERS_2013 = {
+    "best screenplay - motion picture": "django unchained",
+    "best director - motion picture": "ben affleck",
+    "best performance by an actress in a television series - comedy or musical": "lena dunham",
+    "best foreign language film": "amour",
+    "best performance by an actor in a supporting role in a motion picture": "christoph waltz",
+    "best performance by an actress in a supporting role in a series, mini-series or motion picture made for television": "maggie smith",
+    "best motion picture - comedy or musical": "les miserables",
+    "best performance by an actress in a motion picture - comedy or musical": "jennifer lawrence",
+    "best mini-series or motion picture made for television": "game change",
+    "best original score - motion picture": "life of pi",
+    "best performance by an actress in a television series - drama": "claire danes",
+    "best performance by an actress in a motion picture - drama": "jessica chastain",
+    "cecil b. demille award": "jodie foster",
+    "best performance by an actor in a motion picture - comedy or musical": "hugh jackman",
+    "best motion picture - drama": "argo",
+    "best performance by an actor in a supporting role in a series, mini-series or motion picture made for television": "ed harris",
+    "best performance by an actress in a supporting role in a motion picture": "anne hathaway",
+    "best television series - drama": "homeland",
+    "best performance by an actor in a mini-series or motion picture made for television": "kevin costner",
+    "best performance by an actress in a mini-series or motion picture made for television": "julianne moore",
+    "best animated feature film": "brave",
+    "best original song - motion picture": "skyfall",
+    "best performance by an actor in a motion picture - drama": "daniel day-lewis",
+    "best television series - comedy or musical": "girls",
+    "best performance by an actor in a television series - drama": "damian lewis",
+    "best performance by an actor in a television series - comedy or musical": "don cheadle"
+}
 
 #sentence similarity scores
 def similarity_score(s1, s2):
@@ -128,7 +159,7 @@ def get_best_dressed(year):
     #filter to tweets that only have host keywords
     keywords = ['best dressed']
     #keywords to throw out irrelevant tweets
-    keywords_to_throw = []
+    keywords_to_throw = ['rt']
     filtered_tweets = []
 
     for tweet in final_tweets:
@@ -138,6 +169,12 @@ def get_best_dressed(year):
     print(rf"# of Tweets with best dressed keywords: {len(filtered_tweets)} tweets")
 
     best_dressed_names = []
+
+    #Test print for best dressed tweets
+    # for i, tweet in enumerate(filtered_tweets, start=1):
+    #     print(f"{i}. {tweet}")
+    #     print()
+    #     pass
 
     for tweet in filtered_tweets:
         doc = nlp(tweet)
@@ -150,8 +187,14 @@ def get_best_dressed(year):
 
     best_dressed_counts = Counter(best_dressed_names)
 
+    #Filters out event name from the final answer like "Golden Globes"
+    filtered_counts = {
+        name: count for name, count in best_dressed_counts.items()
+        if not any(event_word in name.lower() for event_word in EVENT_NAME_LIST)
+    }
+
     #extract only top NUM_BEST_DRESSED names
-    best_dressed = [name for name, count in best_dressed_counts.most_common(NUM_BEST_DRESSED)]
+    best_dressed = [name for name, count in Counter(filtered_counts).most_common(NUM_BEST_DRESSED)]
 
     return best_dressed
 
@@ -179,7 +222,7 @@ def get_worst_dressed(year):
     #filter to tweets that only have host keywords
     keywords = ['worst dressed']
     #keywords to throw out irrelevant tweets
-    keywords_to_throw = []
+    keywords_to_throw = ['rt']
     filtered_tweets = []
 
     for tweet in final_tweets:
@@ -187,6 +230,12 @@ def get_worst_dressed(year):
             if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
                 filtered_tweets.append(tweet)
     print(rf"# of Tweets with worst dressed keywords: {len(filtered_tweets)} tweets")
+
+    #Test print for worst dressed tweets
+    # for i, tweet in enumerate(filtered_tweets, start=1):
+    #     print(f"{i}. {tweet}")
+    #     print()
+    #     pass
 
     worst_dressed_names = []
 
@@ -201,8 +250,14 @@ def get_worst_dressed(year):
 
     worst_dressed_counts = Counter(worst_dressed_names)
 
-    #extract only top NUM_BEST_DRESSED names
-    worst_dressed = [name for name, count in worst_dressed_counts.most_common(NUM_WORST_DRESSED)]
+    #Filters out event name from the final answer like "Golden Globes"
+    filtered_counts = {
+        name: count for name, count in worst_dressed_counts.items()
+        if not any(event_word in name.lower() for event_word in EVENT_NAME_LIST)
+    }
+
+    #extract only top NUM_WORST_DRESSED names
+    worst_dressed = [name for name, count in Counter(filtered_counts).most_common(NUM_WORST_DRESSED)]
 
     return worst_dressed
 
@@ -295,10 +350,10 @@ def get_awards(year):
     print(rf"Potential # of award name tweets: {len(award_tweets)}")
 
     # Print all filtered tweets
-    for i, tweet in enumerate(award_tweets, start=1):
-        #print(f"{i}. {tweet}")
-        #print()
-        pass
+    # for i, tweet in enumerate(award_tweets, start=1):
+    #     print(f"{i}. {tweet}")
+    #     print()
+    #     pass
 
     awards = []
 
@@ -353,9 +408,9 @@ def get_awards(year):
     #Gets top NUM_AWARDS
     awards = awards[:NUM_AWARDS]
     
-    print(f"\nTop awards found:")
-    for i, (award, count) in enumerate(award_counts.most_common(100), 1):
-        print(f"{i}. {award}: {count}")
+    # print(f"\nTop awards found:")
+    # for i, (award, count) in enumerate(award_counts.most_common(100), 1):
+    #     print(f"{i}. {award}: {count}")
 
     return awards
 
@@ -707,6 +762,68 @@ def get_presenters(year):
 
     return(presenters)
 
+def get_winner_sentiments(year):
+    '''
+    Returns the general sentiment to a winner winning an award
+    
+    Returns dictionary key = [award name, winner] and value = sentiment score
+    return sentiment_dict = {[award name, winner]: sentiment score}
+    '''
+
+    # winner_dict = get_winner(year)
+    winner_dict = OFFICIAL_WINNERS_2013 #using official winners for testing since get_winner doesn't have 100% accucracy yet
+    sentiment_dict = {}
+
+    #Init keys of sentiment_dict with keys = [award name, winner] and value (sentiment score) = 0
+    for award in AWARD_NAMES:
+        winner = winner_dict.get(award, "")
+        sentiment_dict[(award, winner)] = 0.0
+
+
+    win_keywords = ['wins', 'win', 'won', 'winner', 'winning', 'awarded', 'is awarded to', 'goes to', 'went to']
+    winner_list = [winner for winner in winner_dict.values() if winner]
+
+    #filter tweets that only mention winner name and win keywords
+    filtered_tweets = []
+
+    #filter tweets that mention any winner and any win keyword
+    for tweet in final_tweets:
+        tweet_lower = tweet.lower()
+        if any(winner.lower() in tweet_lower for winner in winner_list):
+            if any(win_keyword in tweet_lower for win_keyword in win_keywords):
+                filtered_tweets.append(tweet)
+
+    print(rf"Number of Tweets with winner and win keywords: {len(filtered_tweets)} tweets")
+
+    #Print all filtered tweets for TESTING
+    # for i, tweet in enumerate(filtered_tweets, start=1):
+    #     print(f"{i}. {tweet}")
+    #     print()
+    #     pass
+
+    #initialize vader sentiment analyzer
+    analyzer = SentimentIntensityAnalyzer()
+
+    #go through each award, winner pair in sentiment_dict
+    for (award, winner) in sentiment_dict.keys():
+        total_sentiment = 0.0
+        count = 0
+
+        for tweet in filtered_tweets:
+            tweet_lower = tweet.lower()
+            if winner.lower() in tweet_lower:
+                #sentiment from vader
+                sentiment_score = analyzer.polarity_scores(tweet)['compound']
+                total_sentiment += sentiment_score
+                count += 1
+
+        #average sentiment for that award, winner pair
+        final_sentiment = total_sentiment / count if count > 0 else 0.0
+
+        sentiment_dict[(award, winner)] = final_sentiment
+
+    return sentiment_dict
+
 def clean_tweet(tweet):
     #helper function, not built into project reqs.
     """removes emojii(s?), random characters, etc. (anything other than a-z, A-Z, 
@@ -843,28 +960,31 @@ def main():
     # Your code here
     pre_ceremony()
 
-    #get hosts for event
-    hosts = get_hosts(YEAR)
-    print(rf"Hosts: {hosts}")
+    # #get hosts for event
+    # hosts = get_hosts(YEAR)
+    # print(rf"Hosts: {hosts}")
 
-    #get awards
-    awards = get_awards(YEAR)
-    print(rf"Awards: {awards}")
+    # #get awards
+    # awards = get_awards(YEAR)
+    # print(rf"Awards: {awards}")
 
     # nominees = get_nominees(YEAR)
     # print(nominees)
+
     # winner = get_winner(YEAR)
     # print(winner)
 
     #get best dressed
-    best_dressed = get_best_dressed(YEAR)
-    print(rf"Best Dressed: {best_dressed}")
+    # best_dressed = get_best_dressed(YEAR)
+    # print(rf"Best Dressed: {best_dressed}")
 
-    #get best dressed
-    worst_dressed = get_worst_dressed(YEAR)
-    print(rf"Worst Dressed: {worst_dressed}")
+    # #get best dressed
+    # worst_dressed = get_worst_dressed(YEAR)
+    # print(rf"Worst Dressed: {worst_dressed}")
 
-    return
+    #print sentiment scores for winners
+    sentiment_scores = get_winner_sentiments(YEAR)
+    print(sentiment_scores)
 
 if __name__ == '__main__':
     #start timer
