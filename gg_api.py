@@ -696,71 +696,124 @@ def get_winner(year):
 
 
 def get_presenters(year):
-    '''Returns the presenters for each award category.
+   '''Returns the presenters for each award category.
+  
+   Args:
+       year (str): The year of the Golden Globes ceremony (e.g., "2013")
+  
+   Returns:
+       dict: A dictionary where keys are award category names and values are
+             lists of presenter strings.
+             Example: {
+                 "Best Motion Picture - Drama": ["Barbra Streisand"],
+                 "Best Motion Picture - Musical or Comedy": ["Alicia Vikander", "Michael Keaton"],
+                 "Best Performance by an Actor in a Motion Picture - Drama": ["Emma Stone"]
+             }
+  
+   Note:
+       - Do NOT change the name of this function or what it returns
+       - Use the hardcoded award names as keys (from the global AWARD_NAMES list)
+       - Each value should be a list of strings, even if there's only one presenter
+   '''
+       # using spacy for Recognizing First Names and Last Names
+   try:
+       nlp = spacy.load("en_core_web_sm")
+   except OSError:
+       print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
+       return []
+  
+   all_nominees = get_nominees(year)
+   all_winners = get_winner(year)
+  
+   #filter to tweets that only have host keywords
+   keywords = ['presenting the', 'present the', 'presents the', 'are presenting', \
+               'presenters', 'presents', 'presented by', 'presented', 'present']
+   #keywords to throw out irrelevant tweets
+   keywords_to_throw = ['next year', 'last year', 'should', 'could', 'next', 'future' \
+                        'past', 'previous', 'last', 'former']
+   filtered_tweets = []
+
+
+   for tweet in final_tweets:
+       if any(keyword in tweet.lower() for keyword in keywords):
+           if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
+               filtered_tweets.append(tweet)
+
+
+   print(rf"# of Tweets with presenter keywords: {len(filtered_tweets)} tweets")
+
+
+   #actual award name: [presenter names]
+   potential_presenters = {}
+   presenters = {}
+
+
+   #for each award name make a list of words that would refer to it
+   for award in AWARD_NAMES:
+       #nominees = all_nominees[award]
+       winner = all_winners[award]
+
+
+       potential_presenters[award] = []
+       #make a list of keywords for each award name
+       award_lower = award.lower()
+       #filler words
+       award_keywords = [w for w in award_lower.split() \
+                         if w not in {'by', 'an', 'of', '-', 'the', 'a', 'in', 'or', \
+                                      'performance', 'made', 'for'}]
+       #add some common alternates/abbreviations
+       if 'television' in award_keywords:
+           award_keywords.append('tv')
+       if 'series' in award_keywords:
+           award_keywords.append('show')
+       if ('motion' in award_keywords) and ('picture' in award_keywords):
+           award_keywords.append('movie')
+           award_keywords.append('film')
+
+
     
-    Args:
-        year (str): The year of the Golden Globes ceremony (e.g., "2013")
-    
-    Returns:
-        dict: A dictionary where keys are award category names and values are 
-              lists of presenter strings.
-              Example: {
-                  "Best Motion Picture - Drama": ["Barbra Streisand"],
-                  "Best Motion Picture - Musical or Comedy": ["Alicia Vikander", "Michael Keaton"],
-                  "Best Performance by an Actor in a Motion Picture - Drama": ["Emma Stone"]
-              }
-    
-    Note:
-        - Do NOT change the name of this function or what it returns
-        - Use the hardcoded award names as keys (from the global AWARD_NAMES list)
-        - Each value should be a list of strings, even if there's only one presenter
-    '''
-        # using spacy for Recognizing First Names and Last Names
-    try:
-        nlp = spacy.load("en_core_web_sm")
-    except OSError:
-        print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
-        return []
-    
-    #filter to tweets that only have host keywords
-    keywords = ['presenting the', 'present the', 'presents the', 'are presenting', \
-                'presenters', 'presents', 'presented by', 'presented', 'present']
-    #keywords to throw out irrelevant tweets
-    keywords_to_throw = ['next year', 'last year', 'should', 'could', 'next', 'future' \
-                         'past', 'previous', 'last', 'former']
-    filtered_tweets = []
+       for tweet in filtered_tweets:
+           must_have = []
+           if "actor" in award_lower:
+               must_have.append("actor")
+           if "actress" in award_lower:
+               must_have.append("actress")
+           tweet_lower = tweet.lower()
+           #make sure gender of recipient matches award (if applicable)
+           #this is because many awards are
+           if must_have and not any(w in tweet_lower for w in must_have):
+               continue
+           #remove tweets containting "RT" (retweets)
+           if 'rt ' in tweet_lower:
+               continue
+           tweet_len = len(tweet_lower)
+           num_keywords_found = 0
+           for word in award_keywords:
+               if word in tweet_lower:
+                   num_keywords_found += 1
 
-    for tweet in final_tweets:
-        if any(keyword in tweet.lower() for keyword in keywords):
-            if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
-                filtered_tweets.append(tweet)
+           #if at least half the award keywords are found in tweet
+           if num_keywords_found >= ((len(award_keywords) / 2)):
 
-    print(rf"# of Tweets with presenter keywords: {len(filtered_tweets)} tweets")
+               doc = nlp(tweet)
+               for ent in doc.ents:
+                   if (ent.text.strip() != winner): #not in nominees) and (ent.text.strip() != winner):
+                       if ent.label_ == "PERSON":         #only get the Person labels
+                           name = ent.text.strip()
+                           word_count = len(name.split())
+                           if 2 <= word_count <= 3:      #keep names with 2 to 3 words (First, Middle, Last Names)
+                               potential_presenters[award].append(name)
 
 
-    #actual award name: [presenter names]
-    presenters = {}
+       #set presenters for award to most common 2 names found in potential presenters
+       name_counts = Counter(potential_presenters[award])
+       most_common_name = name_counts.most_common(2)
+       presenters[award] = [name for name, _ in most_common_name]
+      
+       print(f"presenters found for {award}: {presenters[award]}\n")
 
-    #for each award name make a list of words that would refer to it 
-    for award in AWARD_NAMES:
-        presenters[award] = []
-        #make a list of keywords for each award name
-        award_lower = award.lower()
-        award_keywords = [w for w in award_lower.split() \
-                          if w not in {'by', 'an', 'of', '-', 'the', 'a', 'in', 'or'}]
-        #add some common alternates/abbreviations
-        if 'television' in award_keywords:
-            award_keywords.append('tv')
-        if 'series' in award_keywords:
-            award_keywords.append('show')
-        if ('motion' in award_keywords) and ('picture' in award_keywords):
-            award_keywords.append('movie')
-            award_keywords.append('film')
 
-        for tweet in filtered_tweets:
-            pass
-
-    return(presenters)
+   return(presenters)
 
 def get_winner_sentiments(year):
     '''
@@ -973,6 +1026,9 @@ def main():
 
     # winner = get_winner(YEAR)
     # print(winner)
+
+    #presenters = get_presenters(YEAR)
+    ##print(rf"Presenters: {presenters}")
 
     #get best dressed
     # best_dressed = get_best_dressed(YEAR)
