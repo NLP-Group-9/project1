@@ -58,7 +58,13 @@ We filter out tweets that don't mention the winner names, as well win keywords. 
 
 Result: no autograder to run against
 
+6) get_presenters
 
+We filter tweets to only those containing presenter-related keywords such as ["presented by", "presents", "presenting", etc.]. From that filtered set, we match tweets to award categories by checking if they contain at least half of the cleaned award keywords (with handling for dashes and actor/actress requirements). For each matching tweet, we use the spaCy named entity recognition model to extract person names (len(name) >= 2). We then count the frequency of all detected names per award and select the top 2 most frequent as the presenters.
+
+Result: successfully finds 12 of the 44 presenters, with a success rate of just over 27%
+
+Note: our function returns the top 2 most likely presenters for each award, even though some of them only have 1 presenter
 
 
 
