@@ -57,6 +57,7 @@ Result: no autograder to run against
 We filter out tweets that don't mention the winner names, as well win keywords. From there, we loop through all the winner names and filter tweets that only mention the winner names, getting an aggregate sentiment score from the VADER sentiment analysis library. Then for each winner, we'd have the sentiments to them winning that particular award.
 
 Result: no autograder to run against
+Note: Has option to either use implemented get_winners() or hardcoded list of winners and awards for testing purposes.
 
 6) get_presenters
 
