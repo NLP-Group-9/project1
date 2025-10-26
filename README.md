@@ -27,7 +27,7 @@ Here is a brief overview on how we implemented the get methods to find the appro
 
 1) get_awards
 
-We filter out tweets that don't have win keywords = ["wins", "goes to", etc] as well as the keyword = "best". We also filter out tweets with trouble some keywords = ["for", "at", etc]. From that set of filtered tweets, we do a regex match on the best keyword as well as the win keywords in pre or post order. For example, we match on "best [AWARD_NAME] goes to" and "[___ wins best [AWARD_NAME]". We keep the top 26 most frequent award names and return that award name list.
+We filter out tweets that don't have win keywords = ["wins", "goes to", etc] as well as the keyword = "best". We also filter out tweets with trouble some keywords = ["for", "at", etc]. From that set of filtered tweets, we do a regex match on the best keyword as well as the win keywords in pre or post order. For example, we match on "best [AWARD_NAME] goes to" and "[___ wins best [AWARD_NAME]". We keep the top 26 most frequent award names and return that award name list. There are many award names that are similar to each other so we used a comparison metric between each award name to group them up as one award name.
 
 Result: autograder gave {'2013': {'awards': {'completeness': 0.15454545454545454,
                      'spelling': 0.8162515828433672}}}
