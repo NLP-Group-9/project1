@@ -333,6 +333,7 @@ def get_awards(year):
         - Award names should be extracted from tweets, not hardcoded
         - The only hardcoded part allowed is the word "Best"
     '''
+    #pre_ceremony()
     # Your code here
     primary_keyword = 'best'
     pre_keywords = ['wins', 'won', 'winner', 'winning', 'awarded', 'is awarded to']
@@ -823,7 +824,7 @@ def get_winner_sentiments(year):
     return sentiment_dict = {[award name, winner]: sentiment score}
     '''
 
-    # winner_dict = get_winner(year)
+    #winner_dict = get_winner(year)
     winner_dict = OFFICIAL_WINNERS_2013 #using official winners for testing since get_winner doesn't have 100% accucracy yet
     sentiment_dict = {}
 
@@ -1013,34 +1014,74 @@ def main():
     # Your code here
     pre_ceremony()
 
-    # #get hosts for event
-    # hosts = get_hosts(YEAR)
-    # print(rf"Hosts: {hosts}")
+    #get hosts for event
+    hosts = get_hosts(YEAR)
+    print(rf"Hosts: {hosts}")
 
     # #get awards
-    # awards = get_awards(YEAR)
-    # print(rf"Awards: {awards}")
+    awards = get_awards(YEAR)
+    print(rf"Awards: {awards}")
 
-    # nominees = get_nominees(YEAR)
-    # print(nominees)
+    nominees = get_nominees(YEAR)
+    print(nominees)
 
-    # winner = get_winner(YEAR)
-    # print(winner)
+    winner = get_winner(YEAR)
+    print(winner)
+
+    presenters = get_presenters(YEAR)
+    print(presenters)
 
     #presenters = get_presenters(YEAR)
     ##print(rf"Presenters: {presenters}")
 
     #get best dressed
-    # best_dressed = get_best_dressed(YEAR)
-    # print(rf"Best Dressed: {best_dressed}")
+    best_dressed = get_best_dressed(YEAR)
+    print(rf"Best Dressed: {best_dressed}")
 
-    # #get best dressed
-    # worst_dressed = get_worst_dressed(YEAR)
-    # print(rf"Worst Dressed: {worst_dressed}")
+    #get best dressed
+    worst_dressed = get_worst_dressed(YEAR)
+    print(rf"Worst Dressed: {worst_dressed}")
 
     #print sentiment scores for winners
     sentiment_scores = get_winner_sentiments(YEAR)
     print(sentiment_scores)
+
+    #json formatted
+    results = {
+        "ceremony": {
+            "name": NAME,
+            "year": YEAR
+        },
+        "hosts": hosts,
+        "awards": awards,
+        "award_data": {
+            "nominees": nominees,
+            "winners": winner,
+            "presenters": presenters
+        },
+        "best_dressed": best_dressed,
+        "worst_dressed": worst_dressed,
+        "winner_sentiments": {
+            f"{award} - {winner_name}": sentiment
+            for (award, winner_name), sentiment in sentiment_scores.items()
+        }
+    }
+
+    #print json results to terminal
+    print("\n" + "="*80)
+    print("FINAL RESULTS:")
+    print("="*80)
+    print(json.dumps(results, indent=2))
+    print("="*80 + "\n")
+
+    #Save JSON to result file
+    output_filename = f"gg{YEAR}_results.json"
+    try:
+        with open(output_filename, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
+        print(f"Results successfully saved to {output_filename}")
+    except Exception as e:
+        print(f"Error saving results to file: {e}")
 
 if __name__ == '__main__':
     #start timer

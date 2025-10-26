@@ -1,0 +1,312 @@
+{
+  "ceremony": {
+    "name": "The Golden Globes",
+    "year": "2013"
+  },
+  "hosts": [
+    "Amy Poehler",
+    "Tina Fey"
+  ],
+  "awards": [
+    "best actress motion picture drama",
+    "best motion picture comedy or musical",
+    "best actor in a motion picture drama",
+    "best supporting actress in a motion picture drama",
+    "best actress in a comedymusical",
+    "best actress tv series drama",
+    "best actress in a comedy tv series comedy or musical",
+    "best animated feature film pixarbrave",
+    "best supporting actor in a drama",
+    "best foreign language film",
+    "best miniseries or tv movie category",
+    "best actress in a tv series drama",
+    "best actress in a tv drama",
+    "best motion picture screenplay",
+    "best actor tv series comedy or musical",
+    "best actress in a motion picture drama",
+    "best motion picture and best director",
+    "best supporting actor globe",
+    "best original song in a motion picture",
+    "best song at golden globes",
+    "best actor in a musical or comedy award",
+    "best actor in a television series in a comedy or musical",
+    "best performance by an actress in a motion picture drama",
+    "best actress in a miniseries or tv movie",
+    "best actor in a miniseriestv movie",
+    "best actor in a tv series or drama"
+  ],
+  "award_data": {
+    "nominees": {
+      "best screenplay - motion picture": [
+        "Bill Clinton",
+        "Les Miserables",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "President Clinton"
+      ],
+      "best director - motion picture": [
+        "Ben Affleck",
+        "Bill Clinton",
+        "Les Miserables",
+        "Anne Hathaway",
+        "President Clinton"
+      ],
+      "best performance by an actress in a television series - comedy or musical": [
+        "Lena Dunham",
+        "Claire Danes",
+        "Tina Fey",
+        "Nathan Fillion",
+        "Lea Michele"
+      ],
+      "best foreign language film": [
+        "Sylvester Stallone",
+        "Wow  Just",
+        "If Amour",
+        "Best Foreign Language Film &amp",
+        "Zero Necks"
+      ],
+      "best performance by an actor in a supporting role in a motion picture": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best performance by an actress in a supporting role in a series, mini-series or motion picture made for television": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best motion picture - comedy or musical": [
+        "Bill Clinton",
+        "Les Miserables",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "President Clinton"
+      ],
+      "best performance by an actress in a motion picture - comedy or musical": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best mini-series or motion picture made for television": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best original score - motion picture": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Hans Zimmer",
+        "Les Mis"
+      ],
+      "best performance by an actress in a television series - drama": [
+        "Lena Dunham",
+        "Claire Danes",
+        "Alex Gansa",
+        "Tina Fey",
+        "Nathan Fillion"
+      ],
+      "best performance by an actress in a motion picture - drama": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "cecil b. demille award": [],
+      "best performance by an actor in a motion picture - comedy or musical": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best motion picture - drama": [
+        "Bill Clinton",
+        "Les Miserables",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "President Clinton"
+      ],
+      "best performance by an actor in a supporting role in a series, mini-series or motion picture made for television": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best performance by an actress in a supporting role in a motion picture": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best television series - drama": [
+        "Lena Dunham",
+        "Claire Danes",
+        "Alex Gansa",
+        "Tina Fey",
+        "Nathan Fillion"
+      ],
+      "best performance by an actor in a mini-series or motion picture made for television": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best performance by an actress in a mini-series or motion picture made for television": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best animated feature film": [
+        "Outstanding Animation in an Animated Feature Film",
+        "Outstanding Animation",
+        "Hotel Transylvania",
+        "Animated Feature Film",
+        "The nominees for Best Animated Film of 2012 are... every animated film of 2012"
+      ],
+      "best original song - motion picture": [
+        "Les Miserables",
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "President Clinton"
+      ],
+      "best performance by an actor in a motion picture - drama": [
+        "Bill Clinton",
+        "Ben Affleck",
+        "Anne Hathaway",
+        "Les Mis",
+        "Sylvester Stallone"
+      ],
+      "best television series - comedy or musical": [
+        "Lena Dunham",
+        "Claire Danes",
+        "Tina Fey",
+        "Nathan Fillion",
+        "Lea Michele"
+      ],
+      "best performance by an actor in a television series - drama": [
+        "Lena Dunham",
+        "Claire Danes",
+        "Alex Gansa",
+        "Tina Fey",
+        "Nathan Fillion"
+      ],
+      "best performance by an actor in a television series - comedy or musical": [
+        "Lena Dunham",
+        "Claire Danes",
+        "Tina Fey",
+        "Nathan Fillion",
+        "Lea Michele"
+      ]
+    },
+    "winners": {
+      "best screenplay - motion picture": "Les Miserables",
+      "best director - motion picture": "Les Miserables",
+      "best performance by an actress in a television series - comedy or musical": "Maggie Smith",
+      "best foreign language film": "Best Foreign Language Film &amp",
+      "best performance by an actor in a supporting role in a motion picture": "Anne Hathaway",
+      "best performance by an actress in a supporting role in a series, mini-series or motion picture made for television": "Anne Hathaway",
+      "best motion picture - comedy or musical": "Les Miserables",
+      "best performance by an actress in a motion picture - comedy or musical": "Anne Hathaway",
+      "best mini-series or motion picture made for television": "Anne Hathaway",
+      "best original score - motion picture": "Anne Hathaway",
+      "best performance by an actress in a television series - drama": "Maggie Smith",
+      "best performance by an actress in a motion picture - drama": "Anne Hathaway",
+      "cecil b. demille award": "Jodie Foster",
+      "best performance by an actor in a motion picture - comedy or musical": "Anne Hathaway",
+      "best motion picture - drama": "Les Miserables",
+      "best performance by an actor in a supporting role in a series, mini-series or motion picture made for television": "Anne Hathaway",
+      "best performance by an actress in a supporting role in a motion picture": "Anne Hathaway",
+      "best television series - drama": "Lena Dunham",
+      "best performance by an actor in a mini-series or motion picture made for television": "Anne Hathaway",
+      "best performance by an actress in a mini-series or motion picture made for television": "Anne Hathaway",
+      "best animated feature film": "Best Animated Feature Film",
+      "best original song - motion picture": "Les Miserables",
+      "best performance by an actor in a motion picture - drama": "Anne Hathaway",
+      "best television series - comedy or musical": "Lena Dunham",
+      "best performance by an actor in a television series - drama": "Lena Dunham",
+      "best performance by an actor in a television series - comedy or musical": "Lena Dunham"
+    },
+    "presenters": {
+      "best screenplay - motion picture": [],
+      "best director - motion picture": [],
+      "best performance by an actress in a television series - comedy or musical": [],
+      "best foreign language film": [],
+      "best performance by an actor in a supporting role in a motion picture": [],
+      "best performance by an actress in a supporting role in a series, mini-series or motion picture made for television": [],
+      "best motion picture - comedy or musical": [],
+      "best performance by an actress in a motion picture - comedy or musical": [],
+      "best mini-series or motion picture made for television": [],
+      "best original score - motion picture": [],
+      "best performance by an actress in a television series - drama": [],
+      "best performance by an actress in a motion picture - drama": [],
+      "cecil b. demille award": [],
+      "best performance by an actor in a motion picture - comedy or musical": [],
+      "best motion picture - drama": [],
+      "best performance by an actor in a supporting role in a series, mini-series or motion picture made for television": [],
+      "best performance by an actress in a supporting role in a motion picture": [],
+      "best television series - drama": [],
+      "best performance by an actor in a mini-series or motion picture made for television": [],
+      "best performance by an actress in a mini-series or motion picture made for television": [],
+      "best animated feature film": [],
+      "best original song - motion picture": [],
+      "best performance by an actor in a motion picture - drama": [],
+      "best television series - comedy or musical": [],
+      "best performance by an actor in a television series - drama": [],
+      "best performance by an actor in a television series - comedy or musical": []
+    }
+  },
+  "best_dressed": [
+    "Kate Hudson",
+    "Anne Hathaway",
+    "Jessica Alba"
+  ],
+  "worst_dressed": [
+    "Halle Berry",
+    "Anne Hathaway",
+    "Sienna Miller"
+  ],
+  "winner_sentiments": {
+    "best screenplay - motion picture - django unchained": 0.7570728971962623,
+    "best director - motion picture - ben affleck": 0.7326623093681928,
+    "best performance by an actress in a television series - comedy or musical - lena dunham": 0.6573176724137928,
+    "best foreign language film - amour": 0.7360799999999994,
+    "best performance by an actor in a supporting role in a motion picture - christoph waltz": 0.7397372093023264,
+    "best performance by an actress in a supporting role in a series, mini-series or motion picture made for television - maggie smith": 0.7058544117647066,
+    "best motion picture - comedy or musical - les miserables": 0.797149357326479,
+    "best performance by an actress in a motion picture - comedy or musical - jennifer lawrence": 0.7429374695863759,
+    "best mini-series or motion picture made for television - game change": 0.6835713513513508,
+    "best original score - motion picture - life of pi": 0.6321322448979579,
+    "best performance by an actress in a television series - drama - claire danes": 0.67164200913242,
+    "best performance by an actress in a motion picture - drama - jessica chastain": 0.7446480851063837,
+    "cecil b. demille award - jodie foster": 0.5061588957055213,
+    "best performance by an actor in a motion picture - comedy or musical - hugh jackman": 0.7621095070422536,
+    "best motion picture - drama - argo": 0.7286672645739926,
+    "best performance by an actor in a supporting role in a series, mini-series or motion picture made for television - ed harris": 0.7652577777777776,
+    "best performance by an actress in a supporting role in a motion picture - anne hathaway": 0.6851611940298505,
+    "best television series - drama - homeland": 0.6758874015748046,
+    "best performance by an actor in a mini-series or motion picture made for television - kevin costner": 0.6147490740740739,
+    "best performance by an actress in a mini-series or motion picture made for television - julianne moore": 0.5556545454545453,
+    "best animated feature film - brave": 0.8144243727598568,
+    "best original song - motion picture - skyfall": 0.8030469194312804,
+    "best performance by an actor in a motion picture - drama - daniel day-lewis": 0.0,
+    "best television series - comedy or musical - girls": 0.7082978761061961,
+    "best performance by an actor in a television series - drama - damian lewis": 0.6972499999999998,
+    "best performance by an actor in a television series - comedy or musical - don cheadle": 0.7199184873949582
+  }
+}
