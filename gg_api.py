@@ -95,6 +95,297 @@ OFFICIAL_WINNERS_2013 = {
     "best performance by an actor in a television series - comedy or musical": "don cheadle"
 }
 
+NOM_KEYWORDS = tuple(k.lower() for k in (
+    'nominee', 'nominees', 'nominated', 'nomination', 'nominations',
+    'noms', 'nom ', '#nominee', '#nominees', '#noms', 'up for',
+    'contender', 'in the running', 'nominated for', 'is nominated',
+    'was nominated', 'are nominated'
+))
+WIN_CUES = (
+    ' wins ', ' win ', ' won ', ' winner', ' goes to ', ' awarded to ',
+    'takes home', 'takes the', 'accepts the', 'accepting the',
+    'picks up', 'snags the', 'claims the', 'collects the', 'earns the',
+    'goes home with'
+)
+PRESENTER_CUES = (
+    ' presenting ', ' presenter', ' presenters', ' presents ', ' presented by '
+)
+STOP_TERMS = {
+    'golden globes', 'golden globe', 'goldenglobes', 'gg',
+    'http', 'https', 't.co', 'best motion picture', 'best animated feature film'
+}
+FILLER = {
+    'by', 'an', 'of', 'the', 'a', 'in', 'or', 'for', 'made',
+    'best', 'award', 'category'
+}
+GENERIC_SINGLE = {
+    'rt', 'tv', 'film', 'movie', 'picture', 'drama', 'comedy', 'musical',
+    'director', 'actress', 'actor', 'performance', 'foreign', 'language',
+    'song', 'score', 'nominee', 'nominees', 'nomination', 'oscars', 'oscar',
+    'kudos', 'congrats', 'this', 'that', 'you', 'they', 'them', 'and', 'the',
+    'love', 'all', 'outstanding animation', 'best', 'picture', 'series'
+}
+GENERIC_PHRASES = {
+    'best actor', 'best actress', 'best picture', 'best performance',
+    'best director', 'best song', 'best score', 'best original song',
+    'best original score', 'best foreign language film',
+    'best motion picture', 'best television series'
+}
+DISQUALIFY_SUBSTRINGS = {
+    'best actress', 'best actor', 'best director', 'best tv', 'best picture',
+    'best performance', 'best motion picture', 'best foreign language',
+    'presenter', 'presenting', 'host', 'hosting', 'oscars', 'oscar',
+    'golden globe', 'golden globes', 'rt', 'tv series', 'tv show',
+    'best original score', 'best original song', 'best song', 'http'
+}
+
+
+def normalize_candidate_text(text):
+    if not isinstance(text, str):
+        return ""
+    cleaned = text.strip(" ,.:;!?'\"-").strip()
+    cleaned = cleaned.replace('#', '').replace('@', '')
+    return cleaned
+
+
+def is_generic_candidate(text):
+    candidate = normalize_candidate_text(text)
+    if not candidate:
+        return True
+    lower = candidate.lower()
+    normalized = re.sub(r'[^a-z0-9 ]+', '', lower).strip()
+    if not normalized:
+        return True
+    if lower.startswith('rt ') or lower.startswith('@'):
+        return True
+    if lower.startswith('best '):
+        return True
+    if any(term in lower for term in STOP_TERMS):
+        return True
+    if any(term in lower for term in DISQUALIFY_SUBSTRINGS):
+        return True
+    if normalized in GENERIC_SINGLE:
+        return True
+    if normalized in GENERIC_PHRASES:
+        return True
+    if any(phrase in lower for phrase in GENERIC_PHRASES):
+        return True
+    if len(normalized) <= 3 and ' ' not in normalized:
+        return True
+    return False
+
+
+def expect_person(award):
+    a = award.lower()
+    if 'cecil b. demille' in a:
+        return True
+    if any(term in a for term in ('screenplay', 'score', 'song', 'motion picture', 'film', 'television series', 'mini-series', 'mini series')):
+        return False
+    return True
+
+
+def award_tokens(award):
+    cleaned = award.lower().replace('-', ' ')
+    words = [w for w in re.findall(r'[a-z]+', cleaned) if w not in FILLER]
+    tokens = set(words)
+
+    for size in (2, 3):
+        for i in range(len(words) - size + 1):
+            phrase = ' '.join(words[i:i+size])
+            if phrase and not phrase.startswith('best '):
+                tokens.add(phrase)
+
+    if 'television' in words or 'tv' in words:
+        tokens |= {'television', 'tv', 'television series', 'tv series'}
+    if 'series' in words:
+        tokens.add('show')
+    if 'motion' in words and 'picture' in words:
+        tokens |= {'motion picture', 'movie', 'film'}
+    if 'mini' in words or 'miniseries' in words or ('series' in words and 'mini' in words):
+        tokens |= {'mini series', 'mini-series', 'miniseries'}
+    if 'comedy' in words and 'musical' in words:
+        tokens.add('comedy or musical')
+
+    return tokens, max(1, len(words))
+
+
+def required_token_hits(word_count):
+    if word_count <= 3:
+        return 1
+    if word_count <= 6:
+        return 2
+    return 3
+
+
+def award_context(award):
+    a = award.lower()
+    ctx = set()
+    if 'director' in a:
+        ctx |= {'director', 'directing'}
+    if 'screenplay' in a:
+        ctx |= {'screenplay', 'writing', 'writer'}
+    if 'song' in a:
+        ctx |= {'song', 'original song', 'music'}
+    if 'score' in a:
+        ctx |= {'score', 'composer'}
+    if 'foreign language' in a:
+        ctx |= {'foreign', 'language'}
+    if 'animated' in a:
+        ctx.add('animated')
+    if 'television series' in a:
+        ctx |= {'series', 'tv', 'show'}
+    if 'motion picture' in a:
+        ctx |= {'film', 'movie'}
+    return ctx
+
+
+def award_signatures(award):
+    a = award.lower()
+    signatures = set()
+
+    def add(term, *synonyms):
+        signatures.add(term)
+        for syn in synonyms:
+            signatures.add(syn)
+
+    if 'drama' in a:
+        add('drama', 'dramatic')
+    if 'comedy' in a:
+        add('comedy')
+    if 'musical' in a:
+        add('musical')
+    if 'supporting' in a:
+        add('supporting')
+    if 'mini-series' in a or 'mini series' in a or 'miniseries' in a:
+        add('mini-series', 'miniseries')
+    if 'television series' in a:
+        add('television series', 'tv series', 'tv')
+    if 'motion picture' in a:
+        add('motion picture', 'film', 'movie')
+    if 'screenplay' in a:
+        add('screenplay', 'writing')
+    if 'song' in a:
+        add('song')
+    if 'score' in a:
+        add('score')
+    if 'foreign language' in a:
+        add('foreign language', 'foreign')
+    if 'animated' in a:
+        add('animated', 'animation')
+    if 'actor' in a:
+        add('actor')
+    if 'actress' in a:
+        add('actress')
+    if 'director' in a:
+        add('director')
+    return signatures
+
+
+def must_terms(award):
+    need = []
+    al = award.lower()
+    if 'actor' in al:
+        need.append('actor')
+    if 'actress' in al:
+        need.append('actress')
+    return need
+
+
+def award_match_score(text_lower, helper):
+    tokens = helper["tokens"]
+    contexts = helper["contexts"]
+    required_terms = helper["requires"]
+    min_hits = helper["min_hits"]
+    signatures = helper["signature_terms"]
+
+    if required_terms and not any(term in text_lower for term in required_terms):
+        return 0
+
+    token_hits = sum(1 for tok in tokens if tok and tok in text_lower)
+    if token_hits < min_hits:
+        return 0
+    if contexts and not any(ctx in text_lower for ctx in contexts):
+        return 0
+    if signatures and not any(sig in text_lower for sig in signatures):
+        return 0
+    return token_hits + 0.5 * sum(1 for ctx in contexts if ctx in text_lower)
+
+
+def clean_candidate(text, want_person):
+    if not text:
+        return None
+    candidate = normalize_candidate_text(text)
+    words = candidate.split()
+    lead_trash = {
+        'are', 'is', 'was', 'were', 'be', 'being', 'been', 'nominees', 'nominee',
+        'best', 'motion', 'picture', 'drama', 'comedy', 'musical', 'television',
+        'series', 'actor', 'actress', 'original', 'song', 'score', 'foreign',
+        'language', 'mini-series', 'mini', 'film', 'movie', 'tv', 'rt', 'presenter',
+        'presenting', 'host', 'hosting'
+    }
+    while words and words[0].lower() in lead_trash:
+        words = words[1:]
+    candidate = ' '.join(words)
+    if not candidate:
+        return None
+    if is_generic_candidate(candidate):
+        return None
+    if len(candidate) <= 2 or not any(ch.isalpha() for ch in candidate):
+        return None
+    if len(candidate.split()) == 1 and len(candidate) <= 3:
+        return None
+    if want_person:
+        tokens = candidate.split()
+        while tokens and tokens[-1].isupper() and len(tokens[-1]) > 3:
+            tokens.pop()
+        if len(tokens) < 2 or len(tokens) > 4:
+            return None
+        if not all(re.search(r"[a-zA-Z]", tok) for tok in tokens):
+            return None
+        candidate = ' '.join(tokens)
+    else:
+        if len(candidate.split()) > 6:
+            return None
+    return candidate
+
+
+def candidate_has_context(segment_lower, candidate_lower, helper, keyword_triggers, window=60):
+    idx = segment_lower.find(candidate_lower)
+    if idx == -1:
+        return False
+    start = max(0, idx - window)
+    end = min(len(segment_lower), idx + len(candidate_lower) + window)
+    window_text = segment_lower[start:end]
+    token_hits = sum(1 for tok in helper["tokens"] if tok in window_text)
+    if token_hits < max(1, helper["min_hits"] - 1):
+        return False
+    if helper["contexts"] and not any(ctx in window_text for ctx in helper["contexts"]):
+        return False
+    if helper["requires"] and not any(req in window_text for req in helper["requires"]):
+        return False
+    if helper["signature_terms"] and not any(sig in window_text for sig in helper["signature_terms"]):
+        return False
+    if keyword_triggers and not any(keyword in window_text for keyword in keyword_triggers):
+        return False
+    return True
+
+
+def build_award_helpers():
+    helpers = {}
+    for award in AWARD_NAMES:
+        tok_info = award_tokens(award)
+        min_hits = required_token_hits(tok_info[1])
+        helpers[award] = {
+            "tokens": tok_info[0],
+            "contexts": award_context(award),
+            "requires": must_terms(award),
+            "want_person": expect_person(award),
+            "min_hits": min_hits,
+            "signature_terms": award_signatures(award)
+        }
+    return helpers
+
+
 #sentence similarity scores
 def similarity_score(s1, s2):
     words_1 = set(s1.split())
@@ -415,7 +706,6 @@ def get_awards(year):
 
     return awards
 
-
 def get_nominees(year):
     '''Returns the nominees for each award category (generalized across years).'''
     try:
@@ -543,156 +833,157 @@ def get_nominees(year):
     return nominees
 
 def get_winner(year):
-    '''Returns the winner for each award category (generalized across years).'''
+    '''Infers award winners from tweets using NLP and win-keyword heuristics.'''
+    if not final_tweets:
+        pre_ceremony()
+
+    results_path = f"results_{year}.json"
+    default_winners = {award: "" for award in AWARD_NAMES}
+
     try:
         nlp = spacy.load("en_core_web_sm")
     except OSError:
         print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
-        return {award: "" for award in AWARD_NAMES}
+        return default_winners
 
-    # --- local helpers (kept inside to avoid global clutter) ---
-    WIN_CUES = (' wins ', ' won ', ' goes to ', ' went to ', ' awarded to ', ' award goes to ')
-    STOP_TERMS = {
-        'golden globes', 'goldenglobes', 'golden globe', 'globes', 'gg',
-        'oscars', 'oscar', 'academy', 'academy awards', 'hfpa',
-        't.co', 'http', 'https'
-    }
-    AWARD_FRAG = {
-        'best','actor','actress','supporting','drama','comedy','musical','television','tv',
-        'series','motion','picture','film','foreign','language','animated','original','score',
-        'song','mini','miniseries','cecil','demille','award','director','screenplay'
-    }
+    if not final_tweets:
+        return default_winners
 
-    def expect_person(award: str) -> bool:
-        a = award.lower()
-        if 'cecil b. demille' in a: return True
-        if 'original score' in a:   return True
-        return any(w in a for w in (
-            'actor','actress','supporting','mini-series','television series','made for television'
-        ))
+    nominees_by_award = get_nominees(year)
+    award_helpers = build_award_helpers()
 
-    def award_tokens(award: str) -> set:
-        toks = [w for w in award.lower().replace('-', ' ').split()
-                if w not in {'by','an','of','the','a','in','or'}]
-        if 'television' in toks: toks.append('tv')
-        if 'series' in toks: toks.append('show')
-        if 'motion' in toks and 'picture' in toks: toks += ['movie','film']
-        return set(toks)
+    EXCLUDE_PHRASES = ('nominee', 'nominees', 'nominated', 'nomination', 'presenting', 'presents', 'host', 'hosting', 'red carpet')
+    WIN_REGEX = re.compile(
+        r'\b(?:wins?|won|winner|goes to|awarded to|takes home|takes the|picks up|snags the|claims the|earns the|goes home with|accepts the|accepting the)\b'
+    )
+    PATTERN_REGEXES = [
+        re.compile(r'(?:wins?|won|takes home|takes the|picks up|snags the|claims the|collects the|earns the|accepts the|accepting the)\s+([^.!?\n]{3,80})', re.IGNORECASE),
+        re.compile(r'(?:goes to|awarded to|goes home with)\s+([^.!?\n]{3,80})', re.IGNORECASE),
+        re.compile(r'(?:winner is|winner:)\s+([^.!?\n]{3,80})', re.IGNORECASE)
+    ]
 
-    def award_context_words(award: str) -> set:
-        a = award.lower()
-        ctx = set()
-        if 'director' in a: ctx |= {'director','directing'}
-        if 'screenplay' in a: ctx |= {'screenplay','writing','writer'}
-        if 'song' in a: ctx |= {'song','original song','music'}
-        if 'score' in a: ctx |= {'score','composer','music'}
-        if 'animated' in a: ctx |= {'animated','animation'}
-        if 'foreign language' in a: ctx |= {'foreign','language'}
-        if 'television series' in a: ctx |= {'series','tv','show'}
-        if 'motion picture' in a: ctx |= {'motion picture','film','movie'}
-        return ctx
+    def find_segments(tweet):
+        lower = tweet.lower()
+        segments = []
+        for match in re.finditer(r'\bbest\b', lower):
+            start = max(0, match.start() - 60)
+            end = min(len(tweet), match.end() + 220)
+            window = tweet[start:end]
+            window_lower = lower[start:end]
+            if WIN_REGEX.search(window_lower):
+                segments.append((window, window_lower))
+        if not segments:
+            for match in WIN_REGEX.finditer(lower):
+                start = max(0, match.start() - 80)
+                end = min(len(tweet), match.end() + 160)
+                window = tweet[start:end]
+                window_lower = lower[start:end]
+                segments.append((window, window_lower))
+        if not segments and WIN_REGEX.search(lower):
+            segments.append((tweet, lower))
+        return segments
 
-    def mentions_award(tw_lower: str, toks: set, ctx: set) -> bool:
-        tl = tw_lower.replace('-', ' ').replace('&', 'and')
-        token_hit = sum(1 for t in toks if t in tl) >= 2
-        ctx_hit = any(c in tl for c in ctx) if ctx else True
-        cue_hit = any(c.strip() in tl for c in WIN_CUES)
-        return token_hit and ctx_hit and cue_hit
+    def pattern_candidates(segment):
+        results = []
+        for regex in PATTERN_REGEXES:
+            for match in regex.finditer(segment):
+                chunk = match.group(1).strip()
+                chunk = re.split(r'(?:\s+for\s+|\s+at\s+|\s+-\s+)', chunk)[0]
+                chunk = chunk.split(',')[0]
+                chunk = chunk.strip(" .,:;!?")
+                if chunk:
+                    results.append(chunk)
+        return results
 
-    def clean_candidate(s: str) -> str | None:
-        s = s.strip(" '.,:;!?")
-        if not s:
-            return None
-        low = s.lower()
-        if low.startswith('rt ') or s.startswith('@') or ' rt ' in low:
-            return None
-        if any(low == st or low.startswith(st) for st in STOP_TERMS):
-            return None
-        if all(w in AWARD_FRAG for w in low.split()):
-            return None
-        return s
+    def extract_winner_candidates(segment, segment_lower, helper, nominees):
+        candidates = []
+        for nominee in nominees:
+            if not nominee:
+                continue
+            if nominee.lower() in segment_lower:
+                candidates.append(nominee)
+        candidates.extend(pattern_candidates(segment))
 
-    def first_after_cue_segment(text: str) -> str | None:
-        tl = text.lower()
-        for cue in WIN_CUES:
-            i = tl.find(cue)
-            if i != -1:
-                seg = text[i + len(cue):]
-                cut = re.split(r'[.!?\n]| via | http', seg, maxsplit=1)
-                return cut[0][:160]
-        return None
-
-    def pick_from_segment(seg: str, want_person: bool) -> str | None:
-        # Prefer quoted WORK
-        if not want_person:
-            m = re.search(r'["“]([^"”]{3,80})["”]', seg)
-            if m:
-                val = clean_candidate(m.group(1).strip())
-                if val and len(val.split()) >= 2:
-                    return val
-        doc = nlp(seg)
-        if want_person:
-            ents = [e.text for e in doc.ents if e.label_ == 'PERSON' and len(e.text.split()) >= 2]
+        doc = nlp(segment)
+        if helper["want_person"]:
+            ents = [e.text for e in doc.ents if e.label_ == 'PERSON']
         else:
-            ents = [e.text for e in doc.ents if e.label_ in {'WORK_OF_ART','EVENT','ORG'}]
-            if not ents:
-                # fallback: multi-word TitleCase
-                m2 = re.search(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,6})\b', seg)
-                if m2:
-                    ents = [m2.group(1)]
-        for raw in ents:
-            c = clean_candidate(raw or '')
-            if not c:
+            ents = [e.text for e in doc.ents if e.label_ in {'WORK_OF_ART', 'EVENT', 'ORG'}]
+        candidates.extend(ents)
+
+        filtered = []
+        seen = set()
+        for raw in candidates:
+            cleaned = clean_candidate(raw, helper["want_person"])
+            if not cleaned:
                 continue
-            if not want_person and len(c.split()) < 2:
+            lowered = cleaned.lower()
+            if lowered in seen:
                 continue
-            return c
-        return None
+            if not candidate_has_context(segment_lower, lowered, helper, WIN_CUES, window=90):
+                continue
+            seen.add(lowered)
+            filtered.append(cleaned)
+        return filtered
 
-    # main selection
-    win_tweets = [tw for tw in final_tweets if any(c.strip() in tw.lower() for c in WIN_CUES)]
-    print(rf"# of Tweets with winner cues: {len(win_tweets)}")
+    winner_votes = {award: Counter() for award in AWARD_NAMES}
 
-    # optional: use nominees as precision filter
-    try:
-        nominees_by_award = get_nominees(year)
-    except Exception:
-        nominees_by_award = {award: [] for award in AWARD_NAMES}
+    for tweet in final_tweets:
+        lower = tweet.lower()
+        if not WIN_REGEX.search(lower):
+            continue
+        if any(bad in lower for bad in EXCLUDE_PHRASES):
+            continue
 
-    winners = {award: "" for award in AWARD_NAMES}
-    counts = {award: Counter() for award in AWARD_NAMES}
+        segments = find_segments(tweet)
+        if not segments:
+            continue
 
+        weight = 1.0
+        if lower.strip().startswith('rt '):
+            weight -= 0.25
+        if tweet.count('!') >= 2:
+            weight += 0.1
+        weight = max(0.2, weight)
+
+        for segment, segment_lower in segments:
+            award_scores = []
+            for award, helper in award_helpers.items():
+                score = award_match_score(segment_lower, helper)
+                if score > 0:
+                    award_scores.append((score, award, helper))
+            if not award_scores:
+                continue
+            award_scores.sort(key=lambda x: x[0], reverse=True)
+            top_score = award_scores[0][0]
+            selected = []
+            for score, award, helper in award_scores:
+                if score < max(1.0, top_score - 0.8):
+                    continue
+                selected.append((award, helper))
+                if len(selected) == 3:
+                    break
+
+            for award, helper in selected:
+                nominees = nominees_by_award.get(award, [])
+                candidates = extract_winner_candidates(segment, segment_lower, helper, nominees)
+                seen = set()
+                for cand in candidates:
+                    key = cand.lower()
+                    if key in seen:
+                        continue
+                    winner_votes[award][cand] += weight
+                    seen.add(key)
+
+    final_winners = {}
     for award in AWARD_NAMES:
-        want_person = expect_person(award)
-        toks = award_tokens(award)
-        ctx = award_context_words(award)
-        nominee_set = set(x.lower() for x in nominees_by_award.get(award, []) if x)
+        counts = winner_votes[award]
+        if counts:
+            final_winners[award] = counts.most_common(1)[0][0]
+        else:
+            final_winners[award] = ""
 
-        for tw in win_tweets:
-            tl = tw.lower()
-            if not mentions_award(tl, toks, ctx):
-                continue
-            seg = first_after_cue_segment(tw)
-            if not seg:
-                continue
-            cand = pick_from_segment(seg, want_person)
-            if not cand:
-                continue
-
-            # base vote
-            base = 1
-            # precision bump if candidate is among nominees (when we have them)
-            if nominee_set and cand.lower() in nominee_set:
-                base += 1
-            # extra bump if tweet includes a context term for the award
-            if any(k in tl for k in ctx):
-                base += 1
-
-            counts[award][cand] += base
-
-        winners[award] = counts[award].most_common(1)[0][0] if counts[award] else ""
-
-    return winners
+    return final_winners
 
 
 
@@ -1011,7 +1302,8 @@ def main():
         - This function should coordinate all the analysis steps
         - Make sure to handle errors gracefully
     '''
-    # Your code here
+
+
     pre_ceremony()
 
     #get hosts for event
@@ -1043,8 +1335,8 @@ def main():
     print(rf"Worst Dressed: {worst_dressed}")
 
     #print sentiment scores for winners
-    sentiment_scores = get_winner_sentiments(YEAR)
-    print(sentiment_scores)
+    # sentiment_scores = get_winner_sentiments(YEAR)
+    # print(sentiment_scores)
 
     #json formatted
     results = {
