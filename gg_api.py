@@ -1340,8 +1340,8 @@ def main():
     print(rf"Worst Dressed: {worst_dressed}")
 
     #print sentiment scores for winners
-    # sentiment_scores = get_winner_sentiments(YEAR)
-    # print(sentiment_scores)
+    sentiment_scores = get_winner_sentiments(YEAR)
+    print(sentiment_scores)
 
     #json formatted
     results = {
