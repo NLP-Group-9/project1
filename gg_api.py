@@ -1165,8 +1165,13 @@ def get_winner_sentiments(year):
         #average sentiment for that award, winner pair
         final_sentiment = total_sentiment / count if count > 0 else 0.0
 
-        sentiment_dict[(award, winner)] = final_sentiment
-
+        #Converts number final sentiment to a human readable string
+        if final_sentiment >= 0.65:
+            sentiment_dict[(award, winner)] = "POSITIVE"
+        elif final_sentiment < 0.65 and final_sentiment > 0.45:
+            sentiment_dict[(award, winner)] = "NEUTRAL"
+        else:
+            sentiment_dict[(award, winner)] = "NEGATIVE"
     return sentiment_dict
 
 def clean_tweet(tweet):
