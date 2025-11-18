@@ -6,6 +6,7 @@ from collections import Counter
 import spacy
 import time
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import os
 
 #from datetime import datetime #for debugging only as of now
 #from langdetect import detect
@@ -440,6 +441,17 @@ def get_best_dressed(year):
         - Do NOT change the name of this function or what it returns
         - The function should return a list even if there's only one host
     '''
+    #If results.json alr exists, read from that instead
+    results_filename = f"gg{year}_results.json"
+    if os.path.exists(results_filename):
+        try:
+            with open(results_filename, 'r', encoding='utf-8') as f:
+                cached_results = json.load(f)
+                print(f"Loading awards from already generated file: {results_filename}")
+                return cached_results.get('best_dressed', [])
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error reading results: {e}. Recalculating best dressed...")
+    
     # using spacy for Recognizing First Names and Last Names
     try:
         nlp = spacy.load("en_core_web_sm")
@@ -503,6 +515,16 @@ def get_worst_dressed(year):
         - Do NOT change the name of this function or what it returns
         - The function should return a list even if there's only one host
     '''
+    #If results.json alr exists, read from that instead
+    results_filename = f"gg{year}_results.json"
+    if os.path.exists(results_filename):
+        try:
+            with open(results_filename, 'r', encoding='utf-8') as f:
+                cached_results = json.load(f)
+                print(f"Loading awards from already generated file: {results_filename}")
+                return cached_results.get('worst_dressed', [])
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error reading results: {e}. Recalculating worst dressed...")
     # using spacy for Recognizing First Names and Last Names
     try:
         nlp = spacy.load("en_core_web_sm")
@@ -566,6 +588,17 @@ def get_hosts(year):
         - Do NOT change the name of this function or what it returns
         - The function should return a list even if there's only one host
     '''
+    #If results.json alr exists, read from that instead
+    results_filename = f"gg{year}_results.json"
+    if os.path.exists(results_filename):
+        try:
+            with open(results_filename, 'r', encoding='utf-8') as f:
+                cached_results = json.load(f)
+                print(f"Loading awards from already generated file: {results_filename}")
+                return cached_results.get('hosts', [])
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error reading results: {e}. Recalculating hosts...")
+
     # using spacy for Recognizing First Names and Last Names
     try:
         nlp = spacy.load("en_core_web_sm")
@@ -624,6 +657,17 @@ def get_awards(year):
         - Award names should be extracted from tweets, not hardcoded
         - The only hardcoded part allowed is the word "Best"
     '''
+    #If results.json alr exists, read from that instead
+    results_filename = f"gg{year}_results.json"
+    if os.path.exists(results_filename):
+        try:
+            with open(results_filename, 'r', encoding='utf-8') as f:
+                cached_results = json.load(f)
+                print(f"Loading awards from already generated file: {results_filename}")
+                return cached_results.get('awards', [])
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error reading results: {e}. Recalculating awards...")
+
     #pre_ceremony()
     # Your code here
     primary_keyword = 'best'
@@ -708,6 +752,18 @@ def get_awards(year):
 
 def get_nominees(year):
     '''Returns the nominees for each award category (generalized across years).'''
+    
+    #If results.json alr exists, read from that instead
+    results_filename = f"gg{year}_results.json"
+    if os.path.exists(results_filename):
+        try:
+            with open(results_filename, 'r', encoding='utf-8') as f:
+                cached_results = json.load(f)
+                print(f"Loading awards from already generated file: {results_filename}")
+                return cached_results.get('award_data', {}).get('nominees', {})
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error reading results: {e}. Recalculating nominees...")
+
     try:
         nlp = spacy.load("en_core_web_sm")
     except OSError:
@@ -834,6 +890,16 @@ def get_nominees(year):
 
 def get_winner(year):
     '''Infers award winners from tweets using NLP and win-keyword heuristics.'''
+    #If results.json alr exists, read from that instead
+    results_filename = f"gg{year}_results.json"
+    if os.path.exists(results_filename):
+        try:
+            with open(results_filename, 'r', encoding='utf-8') as f:
+                cached_results = json.load(f)
+                print(f"Loading awards from already generated file: {results_filename}")
+                return cached_results.get('award_data', {}).get('winners', {})
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error reading results: {e}. Recalculating winners...")
     if not final_tweets:
         pre_ceremony()
 
@@ -988,7 +1054,7 @@ def get_winner(year):
 
 
 def get_presenters(year):
-   '''Returns the presenters for each award category.
+    '''Returns the presenters for each award category.
   
    Args:
        year (str): The year of the Golden Globes ceremony (e.g., "2013")
@@ -1007,105 +1073,117 @@ def get_presenters(year):
        - Use the hardcoded award names as keys (from the global AWARD_NAMES list)
        - Each value should be a list of strings, even if there's only one presenter
    '''
-       # using spacy for Recognizing First Names and Last Names
-   try:
-       nlp = spacy.load("en_core_web_sm")
-   except OSError:
-       print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
-       return []
-  
-   all_nominees = get_nominees(year)
-   all_winners = get_winner(year)
-  
-   #filter to tweets that only have host keywords
-   keywords = ['presenting the', 'present the', 'presents the', 'are presenting', \
-               'presenters', 'presents', 'presented by', 'presented', 'present']
-   #keywords to throw out irrelevant tweets
-   keywords_to_throw = ['next year', 'last year', 'should', 'could', 'next', 'future' \
-                        'past', 'previous', 'last', 'former']
-   filtered_tweets = []
-
-
-   for tweet in final_tweets:
-       if any(keyword in tweet.lower() for keyword in keywords):
-           if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
-               filtered_tweets.append(tweet)
-
-
-   print(rf"# of Tweets with presenter keywords: {len(filtered_tweets)} tweets")
-
-
-   #actual award name: [presenter names]
-   potential_presenters = {}
-   presenters = {}
-
-
-   #for each award name make a list of words that would refer to it
-   for award in AWARD_NAMES:
-       #nominees = all_nominees[award]
-       winner = all_winners[award]
-
-
-       potential_presenters[award] = []
-       #make a list of keywords for each award name
-       award_lower = award.lower()
-       #filler words
-       award_keywords = [w for w in award_lower.split() \
-                         if w not in {'by', 'an', 'of', '-', 'the', 'a', 'in', 'or', \
-                                      'performance', 'made', 'for'}]
-       #add some common alternates/abbreviations
-       if 'television' in award_keywords:
-           award_keywords.append('tv')
-       if 'series' in award_keywords:
-           award_keywords.append('show')
-       if ('motion' in award_keywords) and ('picture' in award_keywords):
-           award_keywords.append('movie')
-           award_keywords.append('film')
-
+   #If results.json alr exists, read from that instead
+    results_filename = f"gg{year}_results.json"
+    if os.path.exists(results_filename):
+        try:
+            with open(results_filename, 'r', encoding='utf-8') as f:
+                cached_results = json.load(f)
+                print(f"Loading awards from already generated file: {results_filename}")
+                return cached_results.get('award_data', {}).get('presenters', {})
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error reading results: {e}. Recalculating presenters...")
+    # using spacy for Recognizing First Names and Last Names
 
     
-       for tweet in filtered_tweets:
-           must_have = []
-           if "actor" in award_lower:
-               must_have.append("actor")
-           if "actress" in award_lower:
-               must_have.append("actress")
-           tweet_lower = tweet.lower()
-           #make sure gender of recipient matches award (if applicable)
-           #this is because many awards are
-           if must_have and not any(w in tweet_lower for w in must_have):
-               continue
-           #remove tweets containting "RT" (retweets)
-           if 'rt ' in tweet_lower:
-               continue
-           tweet_len = len(tweet_lower)
-           num_keywords_found = 0
-           for word in award_keywords:
-               if word in tweet_lower:
-                   num_keywords_found += 1
-
-           #if at least half the award keywords are found in tweet
-           if num_keywords_found >= ((len(award_keywords) / 2)):
-
-               doc = nlp(tweet)
-               for ent in doc.ents:
-                   if (ent.text.strip() != winner): #not in nominees) and (ent.text.strip() != winner):
-                       if ent.label_ == "PERSON":         #only get the Person labels
-                           name = ent.text.strip()
-                           word_count = len(name.split())
-                           if 2 <= word_count <= 3:      #keep names with 2 to 3 words (First, Middle, Last Names)
-                               potential_presenters[award].append(name)
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        print("spacy model not downloaded, run: python -m spacy download en_core_web_sm")
+        return []
+    
+    all_nominees = get_nominees(year)
+    all_winners = get_winner(year)
+  
+    #filter to tweets that only have host keywords
+    keywords = ['presenting the', 'present the', 'presents the', 'are presenting', \
+                'presenters', 'presents', 'presented by', 'presented', 'present']
+    #keywords to throw out irrelevant tweets
+    keywords_to_throw = ['next year', 'last year', 'should', 'could', 'next', 'future' \
+                            'past', 'previous', 'last', 'former']
+    filtered_tweets = []
 
 
-       #set presenters for award to most common 2 names found in potential presenters
-       name_counts = Counter(potential_presenters[award])
-       most_common_name = name_counts.most_common(2)
-       presenters[award] = [name for name, _ in most_common_name]
-      
-       print(f"presenters found for {award}: {presenters[award]}\n")
+    for tweet in final_tweets:
+        if any(keyword in tweet.lower() for keyword in keywords):
+            if not any(bad_keyword in tweet.lower() for bad_keyword in keywords_to_throw):
+                filtered_tweets.append(tweet)
 
 
-   return(presenters)
+    print(rf"# of Tweets with presenter keywords: {len(filtered_tweets)} tweets")
+
+
+    #actual award name: [presenter names]
+    potential_presenters = {}
+    presenters = {}
+
+
+    #for each award name make a list of words that would refer to it
+    for award in AWARD_NAMES:
+        #nominees = all_nominees[award]
+        winner = all_winners[award]
+
+
+        potential_presenters[award] = []
+        #make a list of keywords for each award name
+        award_lower = award.lower()
+        #filler words
+        award_keywords = [w for w in award_lower.split() \
+                            if w not in {'by', 'an', 'of', '-', 'the', 'a', 'in', 'or', \
+                                        'performance', 'made', 'for'}]
+        #add some common alternates/abbreviations
+        if 'television' in award_keywords:
+            award_keywords.append('tv')
+        if 'series' in award_keywords:
+            award_keywords.append('show')
+        if ('motion' in award_keywords) and ('picture' in award_keywords):
+            award_keywords.append('movie')
+            award_keywords.append('film')
+
+
+        
+        for tweet in filtered_tweets:
+            must_have = []
+            if "actor" in award_lower:
+                must_have.append("actor")
+            if "actress" in award_lower:
+                must_have.append("actress")
+            tweet_lower = tweet.lower()
+            #make sure gender of recipient matches award (if applicable)
+            #this is because many awards are
+            if must_have and not any(w in tweet_lower for w in must_have):
+                continue
+            #remove tweets containting "RT" (retweets)
+            if 'rt ' in tweet_lower:
+                continue
+            tweet_len = len(tweet_lower)
+            num_keywords_found = 0
+            for word in award_keywords:
+                if word in tweet_lower:
+                    num_keywords_found += 1
+
+            #if at least half the award keywords are found in tweet
+            if num_keywords_found >= ((len(award_keywords) / 2)):
+
+                doc = nlp(tweet)
+                for ent in doc.ents:
+                    if (ent.text.strip() != winner): #not in nominees) and (ent.text.strip() != winner):
+                        if ent.label_ == "PERSON":         #only get the Person labels
+                            name = ent.text.strip()
+                            word_count = len(name.split())
+                            if 2 <= word_count <= 3:      #keep names with 2 to 3 words (First, Middle, Last Names)
+                                potential_presenters[award].append(name)
+
+
+        #set presenters for award to most common 2 names found in potential presenters
+        name_counts = Counter(potential_presenters[award])
+        most_common_name = name_counts.most_common(2)
+        presenters[award] = [name for name, _ in most_common_name]
+        
+        print(f"presenters found for {award}: {presenters[award]}\n")
+
+
+    return(presenters)
 
 def get_winner_sentiments(year):
     '''
@@ -1114,6 +1192,30 @@ def get_winner_sentiments(year):
     Returns dictionary key = [award name, winner] and value = sentiment score
     return sentiment_dict = {[award name, winner]: sentiment score}
     '''
+
+    # If results.json alr exists, read from that instead
+    results_filename = f"gg{year}_results.json"
+    if os.path.exists(results_filename):
+        try:
+            with open(results_filename, 'r', encoding='utf-8') as f:
+                cached_results = json.load(f)
+                print(f"Loading winner sentiments from already generated file: {results_filename}")
+                
+                # Get the cached sentiments with string keys
+                cached_sentiments = cached_results.get('winner_sentiments', {})
+                
+                # Convert string keys back to tuples: "award - winner" -> (award, winner)
+                tuple_sentiments = {}
+                for key, sentiment in cached_sentiments.items():
+                    parts = key.split(" - ")
+                    winner = parts[-1]  # Last element is the winner
+                    award = " - ".join(parts[:-1])  # Everything else is the award
+                    tuple_sentiments[(award, winner)] = sentiment
+                
+                return tuple_sentiments
+                
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error reading results: {e}. Recalculating winner sentiments...")
 
     #winner_dict = get_winner(year)
     winner_dict = OFFICIAL_WINNERS_2013 #using official winners for testing since get_winner doesn't have 100% accucracy yet
@@ -1379,6 +1481,68 @@ def main():
         print(f"Results successfully saved to {output_filename}")
     except Exception as e:
         print(f"Error saving results to file: {e}")
+
+    # Human Readable Output
+    output_lines = []
+    output_lines.append("=" * 100)
+    output_lines.append(f"{'GOLDEN GLOBES RESULTS':^100}")
+    output_lines.append(f"{NAME} - {YEAR}:")
+    output_lines.append("=" * 100)
+
+    output_lines.append(f"\n{' HOSTS ':-^100}")
+    output_lines.append(f"{' & '.join(hosts):^100}")
+
+    output_lines.append(f"\n{' FASHION HIGHLIGHTS ':-^100}")
+    output_lines.append(f"Best Dressed: {', '.join(best_dressed)}")
+    output_lines.append(f"Worst Dressed: {', '.join(worst_dressed)}")
+
+    output_lines.append(f"\n{' AWARDS & WINNERS ':-^100}")
+    for award in AWARD_NAMES:
+        winner_name = winner.get(award, 'N/A')
+        pres = presenters.get(award, [])
+        noms = nominees.get(award, [])
+        
+        output_lines.append(f"\n{award.upper()}")
+        output_lines.append("-" * 100)
+        output_lines.append(f"  WINNER: {winner_name}")
+        
+        if pres:
+            output_lines.append(f"  Presented by: {', '.join(pres)}")
+        
+        if noms:
+            output_lines.append(f"  Nominees:")
+            for nom in noms:
+                marker = "[WINNER]" if nom == winner_name else "         "
+                output_lines.append(f"    {marker} {nom}")
+
+    output_lines.append(f"\n{' SENTIMENT ANALYSIS ':-^100}")
+    positive = sum(1 for s in sentiment_scores.values() if s == "POSITIVE")
+    neutral = sum(1 for s in sentiment_scores.values() if s == "NEUTRAL")
+    negative = sum(1 for s in sentiment_scores.values() if s == "NEGATIVE")
+
+    output_lines.append(f"\nOverall Sentiment Distribution:")
+    output_lines.append(f"  Positive: {positive}")
+    output_lines.append(f"  Neutral: {neutral}")
+    output_lines.append(f"  Negative: {negative}")
+
+    output_lines.append(f"\nDetailed Sentiment by Award:")
+    for (award, winner_name), sentiment in sentiment_scores.items():
+        output_lines.append(f"  [{sentiment}] {award} - {winner_name}")
+
+    output_lines.append("\n" + "=" * 100)
+
+    # Print to console
+    print("\n".join(output_lines))
+
+    # Save to file
+    output_filename = "gg_results_human_readable.txt"
+    try:
+        with open(output_filename, 'w', encoding='utf-8') as f:
+            f.write("\n".join(output_lines))
+        print(f"\nHuman-readable results saved to {output_filename}")
+    except Exception as e:
+        print(f"Error saving human-readable results: {e}")
+
 
 if __name__ == '__main__':
     #start timer
